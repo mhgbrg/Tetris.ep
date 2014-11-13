@@ -18,6 +18,34 @@ public abstract class TetrisPiece {
 		currentState = (currentState + 1) % states.length;
 	}
 	
+	public void moveDown() {
+		pos = new Position(pos.getX(), pos.getY() + 1);
+	}
+	
+	public void moveLeft() {
+		pos = new Position(pos.getX() - 1, pos.getY());
+	}
+	
+	public void moveRight() {
+		pos = new Position(pos.getX() + 1, pos.getY());
+	}
+	
+	public boolean[][] getState() {
+		return states[currentState];
+	}
+	
+	public boolean[][] getNextState() {
+		return states[(currentState + 1) % states.length];
+	}
+	
+	public Position getPos() {
+		return pos;
+	}
+	
+	public Color getColor() {
+		return color;
+	}
+	
 	public void log() {
 		boolean[][] state = states[currentState];
 		for (int i = 0; i < state.length; i++) {
