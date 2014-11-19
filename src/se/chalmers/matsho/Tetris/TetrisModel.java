@@ -72,68 +72,85 @@ public class TetrisModel extends GameModel {
 	
 	@Override
 	public void gameUpdate(final int lastKey) throws GameOverException {
-		if (lastKey == KeyEvent.VK_LEFT
-				|| lastKey == KeyEvent.VK_RIGHT
-				|| lastKey == KeyEvent.VK_UP
-				|| lastKey == KeyEvent.VK_DOWN
-				|| lastKey == KeyEvent.VK_SPACE
-				|| loopCount % 4 == 0) {
-			
-			blankCurrentPiece();
-			updateAction(lastKey);
-			if (loopCount % 4 == 0 && loopCount != 0) {
-				currentPiece.moveDown();
-			}
-			displayCurrentPiece();
+		
+		blankCurrentPiece();
+		updateAction(lastKey);
+		if (loopCount % 4 == 0 && loopCount != 0) {
+			tryMoveDown();
 		}
+		displayCurrentPiece();
 		
 		loopCount++;
 	}
 	
-	private void updateAction(final int key) {
+	private boolean updateAction(final int key) throws GameOverException {
 		switch (key) {
 		case KeyEvent.VK_LEFT:
-			currentPiece.moveLeft();
-			break;
+			if (isMoveLegal(-1, 0)) {
+				currentPiece.moveLeft();
+			}
+			return true;
 		case KeyEvent.VK_RIGHT:
-			currentPiece.moveRight();
-			break;
+			if (isMoveLegal(1, 0)) {
+				currentPiece.moveRight();
+			}
+			return true;
 		case KeyEvent.VK_UP:
 			if (isRotateLegal()) {
 				currentPiece.rotate();
 			}
-			break;
+			return true;
 		case KeyEvent.VK_DOWN:
-			currentPiece.moveDown();
-			break;
+			tryMoveDown();
+			return true;
 		case KeyEvent.VK_SPACE:
-//			currentPiece.drop();
-			break;
+			return true;
+		}
+		return false;
+	}
+	
+	private void tryMoveDown() throws GameOverException {
+		if (isMoveLegal(0, 1)) {
+			currentPiece.moveDown();			
+		} else {
+			displayCurrentPiece();
+			getNewPiece();
+			if (checkForCollision(currentPiece.getState(), currentPiece.getPos())) {
+				throw new GameOverException(0);
+			}
 		}
 	}
 	
-	private boolean isRotateLegal() {
-		boolean[][] nextState = currentPiece.getNextState();
+	private boolean isMoveLegal(final int deltaX, final int deltaY) {
 		try {
-			return checkForCollision(nextState);
+			Position newPos = new Position(currentPiece.getPos().getX() + deltaX, currentPiece.getPos().getY() + deltaY);
+			return !checkForCollision(currentPiece.getState(), newPos);
 		} catch (ArrayIndexOutOfBoundsException e) {
 			return false;
 		}
 	}
 	
-	private boolean checkForCollision(boolean[][] state) {
+	private boolean isRotateLegal() {
+		try {
+			return !checkForCollision(currentPiece.getNextState(), currentPiece.getPos());
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return false;
+		}
+	}
+	
+	private boolean checkForCollision(boolean[][] state, Position pos) {
 		for (int i = 0; i < state.length; i++) {
 			for (int j = 0; j < state[i].length; j++) {
 				if (state[i][j]) {
 					if (getGameboardState(
-							j + currentPiece.getPos().getX(),
-							i + currentPiece.getPos().getY()) != BLANK_TILE) {
-						return false;
+							j + pos.getX(),
+							i + pos.getY()) != BLANK_TILE) {
+						return true;
 					}
 				}
 			}
 		}
-		return true;
+		return false;
 	}
 	
 	private void blankCurrentPiece() {
@@ -146,16 +163,32 @@ public class TetrisModel extends GameModel {
 	
 	private void repaintCurrentPiece(GameTile tile) {
 		boolean[][] state = currentPiece.getState();
+		Position pos = currentPiece.getPos();
+		
 		for (int i = 0; i < state.length; i++) {
 			for (int j = 0; j < state[i].length; j++) {
 				if (state[i][j]) {
 					setGameboardState(
-						j + currentPiece.getPos().getX(),
-						i + currentPiece.getPos().getY(),
+						j + pos.getX(),
+						i + pos.getY(),
 						tile
 					);
 				}
 			}
 		}
 	}
+	
+//	private void repaintPiece(boolean[][] state, Position pos, GameTile tile) {
+//		for (int i = 0; i < state.length; i++) {
+//			for (int j = 0; j < state[i].length; j++) {
+//				if (state[i][j]) {
+//					setGameboardState(
+//						j + pos.getX(),
+//						i + pos.getY(),
+//						tile
+//					);
+//				}
+//			}
+//		}
+//	}
 }
