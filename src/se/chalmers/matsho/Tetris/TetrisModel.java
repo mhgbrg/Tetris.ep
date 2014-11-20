@@ -106,12 +106,45 @@ public class TetrisModel extends GameModel {
 		loopCount++;
 		
 		blankCurrentPiece();
-		updateAction(lastKey);
-		if (loopCount == 4) {
-			tryMoveDown();
+		
+		try {
+			updateAction(lastKey);
+			
+			if (loopCount >= 4) { 
+				if (isMoveLegal(0, 1)) {
+					currentPiece.moveDown();
+				} else {
+					throw new HitBottomException();
+				}
+				
+				loopCount = 0;
+			}
+		} catch (HitBottomException e) {
+			displayCurrentPiece();
+			lineClear();
+			getNewPiece();
+			
+			if (checkForGameOver()) {
+				throw new GameOverException(this.score);
+			}
+			
 			loopCount = 0;
 		}
+		
 		displayCurrentPiece();
+	}
+	
+	/**
+	 * This method is run when a new piece is generated, and checks if it is spawned
+	 * on an already placed piece.
+	 * 
+	 * @return True if game over, otherwise false
+	 */
+	private boolean checkForGameOver() {
+		if (checkForCollision(currentPiece.getState(), currentPiece.getPos())) {
+			return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -123,10 +156,9 @@ public class TetrisModel extends GameModel {
 	 * * right arrow - move piece one column to the right
 	 * * space key - drop piece to the buttom
 	 * 
-	 * @param key The key that has been pressed
 	 * @throws GameOverException
 	 */
-	private void updateAction(final int key) throws GameOverException {
+	private void updateAction(final int key) throws HitBottomException {
 		switch (key) {
 			case KeyEvent.VK_LEFT:
 				if (isMoveLegal(-1, 0)) {
@@ -144,47 +176,24 @@ public class TetrisModel extends GameModel {
 				}
 				break;
 			case KeyEvent.VK_DOWN:
-				tryMoveDown();
+				if (isMoveLegal(0, 1)) {
+					currentPiece.moveDown();
+				} else {
+					throw new HitBottomException();
+				}
 				break;
 			case KeyEvent.VK_SPACE:
 				dropPiece();
-				break;
+				throw new HitBottomException();
 		}
 	}
 	
 	/**
 	 * Drops a piece to the bottom.
-	 * 
-	 * @throws GameOverException
 	 */
-	private void dropPiece() throws GameOverException {
-		boolean loop = true;
-		while (loop) {
-			loop = tryMoveDown();
-		}
-	}
-	
-	/**
-	 * Tries to move the current piece down one row.
-	 * 
-	 * If the move can't be completed, the current piece is considered 'dead'
-	 * and a new random piece is generated.  
-	 * 
-	 * @return true if the piece is moved, false if not
-	 * @throws GameOverException
-	 */
-	private boolean tryMoveDown() throws GameOverException {
-		if (isMoveLegal(0, 1)) {
+	private void dropPiece() {
+		while (isMoveLegal(0, 1)) {
 			currentPiece.moveDown();
-			return true;
-		} else {
-			displayCurrentPiece();
-			lineClear();
-			getNewPiece();
-			if (checkForCollision(currentPiece.getState(), currentPiece.getPos())) {
-				throw new GameOverException(this.score);
-			}
-			return false;
 		}
 	}
 	
@@ -204,20 +213,27 @@ public class TetrisModel extends GameModel {
 			}
 		}
 		
+		score += getScoreForCombo(combo);
+	}
+	
+	/**
+	 * Returns the correct score for a combo
+	 * 
+	 * @param combo Number of lines cleared
+	 * @return Score for specified combo
+	 */
+	private static int getScoreForCombo(int combo) {
 		switch(combo) {
 			case 1:
-				this.score += 40;
-				break;
+				return 40;
 			case 2:
-				this.score += 100;
-				break;
+				return 100;
 			case 3:
-				this.score += 300;
-				break;
+				return 300;
 			case 4:
-				this.score += 1200;
-				break;
+				return 1200;
 		}
+		return 0;
 	}
 	
 	/**
@@ -258,7 +274,7 @@ public class TetrisModel extends GameModel {
 	}
 	
 	/**
-	 * Checks if a move is legeal
+	 * Checks if a move is legal
 	 * 
 	 * @param deltaX Movement in x-axis
 	 * @param deltaY Movement in y-axis
@@ -276,7 +292,7 @@ public class TetrisModel extends GameModel {
 	/**
 	 * Checks if rotate is legal
 	 * 
-	 * @return True if move is lega, otherwise false
+	 * @return True if move is legal, otherwise false
 	 */
 	private boolean isRotateLegal() {
 		try {
