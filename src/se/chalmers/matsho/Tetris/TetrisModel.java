@@ -10,6 +10,7 @@ public class TetrisModel extends GameModel {
 	private static Dimension size;
 	
 	private int score = 0;
+	private boolean gameOver = false;
 	
 	// Tile for the background
 	private static final GameTile BLANK_TILE = new RectangularTile(Color.BLACK);
@@ -31,10 +32,8 @@ public class TetrisModel extends GameModel {
 	public TetrisModel() {
 		size = getGameboardSize();
 		blankBoard();
-		
 		START_POS = new Position(size.width / 2 - 2, -1);
 		getNewPiece();
-		displayCurrentPiece();
 	}
 	
 	/**
@@ -66,27 +65,27 @@ public class TetrisModel extends GameModel {
 		
 		Random rand = new Random();
 		switch (rand.nextInt(7)) {
-		case 0:
-			currentPiece = new OPiece(startPos, Color.YELLOW);
-			break;
-		case 1:
-			currentPiece = new IPiece(startPos, Color.CYAN);
-			break;
-		case 2:
-			currentPiece = new SPiece(startPos, Color.GREEN);
-			break;
-		case 3:
-			currentPiece = new ZPiece(startPos, Color.RED);
-			break;
-		case 4:
-			currentPiece = new LPiece(startPos, Color.ORANGE);
-			break;
-		case 5:
-			currentPiece = new JPiece(startPos, Color.BLUE);
-			break;
-		case 6:
-			currentPiece = new TPiece(startPos, new Color(255, 0, 255));
-			break;
+			case 0:
+				currentPiece = new OPiece(startPos, Color.YELLOW);
+				break;
+			case 1:
+				currentPiece = new IPiece(startPos, Color.CYAN);
+				break;
+			case 2:
+				currentPiece = new SPiece(startPos, Color.GREEN);
+				break;
+			case 3:
+				currentPiece = new ZPiece(startPos, Color.RED);
+				break;
+			case 4:
+				currentPiece = new LPiece(startPos, Color.ORANGE);
+				break;
+			case 5:
+				currentPiece = new JPiece(startPos, Color.BLUE);
+				break;
+			case 6:
+				currentPiece = new TPiece(startPos, new Color(255, 0, 255));
+				break;
 		}
 		
 		currentPieceTile = new PieceTile(currentPiece.getColor());
@@ -96,13 +95,17 @@ public class TetrisModel extends GameModel {
 	 * This method is called periodically to update the game state.
 	 * 
 	 * It takes the last user input and performs the corresponding action
-	 * every time it runs. Every fourth time it automatically moves the current
+	 * every time it runs. Every fourth iteration it automatically moves the current
 	 * piece down one row.
 	 * 
 	 * @throws GameOverException 
 	 */
 	@Override
 	public void gameUpdate(final int lastKey) throws GameOverException {
+		if (gameOver) {
+			throw new GameOverException(this.score);
+		}
+		
 		loopCount++;
 		
 		blankCurrentPiece();
@@ -110,6 +113,7 @@ public class TetrisModel extends GameModel {
 		try {
 			updateAction(lastKey);
 			
+			// Move the piece down one row automatically every fourth iteration
 			if (loopCount >= 4) { 
 				if (isMoveLegal(0, 1)) {
 					currentPiece.moveDown();
@@ -124,9 +128,7 @@ public class TetrisModel extends GameModel {
 			lineClear();
 			getNewPiece();
 			
-			if (checkForGameOver()) {
-				throw new GameOverException(this.score);
-			}
+			gameOver = checkForGameOver();
 			
 			loopCount = 0;
 		}
@@ -154,9 +156,9 @@ public class TetrisModel extends GameModel {
 	 * * down arrow - move piece down one row
 	 * * left arrow - move piece one column to the left
 	 * * right arrow - move piece one column to the right
-	 * * space key - drop piece to the buttom
+	 * * space key - drop piece to the bottom
 	 * 
-	 * @throws GameOverException
+	 * @throws HitBottomException if a piece hits the bottom after movement
 	 */
 	private void updateAction(final int key) throws HitBottomException {
 		switch (key) {
