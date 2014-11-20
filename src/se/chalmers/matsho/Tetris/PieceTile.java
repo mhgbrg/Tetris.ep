@@ -1,3 +1,7 @@
+// Labbgrupp 74
+// Mats Högberg
+// Filip Hallqvist
+
 package se.chalmers.matsho.Tetris;
 
 import java.awt.BasicStroke;

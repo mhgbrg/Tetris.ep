@@ -1,3 +1,7 @@
+// Labbgrupp 74
+// Mats Högberg
+// Filip Hallqvist
+
 package se.chalmers.matsho.Tetris;
 
 import java.awt.Color;
@@ -5,6 +9,12 @@ import java.awt.Dimension;
 import java.awt.event.KeyEvent;
 import java.util.Random;
 
+/**
+ * Model class for the game Tetris
+ * 
+ * @author Mats Högberg
+ * @author Filip Hallqvist
+ */
 public class TetrisModel extends GameModel {
 	// The gameboard size
 	private static Dimension size;
